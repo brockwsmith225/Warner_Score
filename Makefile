@@ -4,7 +4,7 @@ CC = g++
 CFLAGS = -I $(IDIR)
 
 ODIR = obj
-_OBJ = team.o main.o
+_OBJ = team.o main.o big_integer.o
 OBJ = $(patsubst %, $(ODIR)/%,$(_OBJ))
 
 

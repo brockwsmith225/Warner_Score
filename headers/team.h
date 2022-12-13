@@ -1,27 +1,28 @@
 #pragma once
 #include <string>
 #include <map>
+#include "big_integer.h"
 namespace Team {
 	class TeamMetaData {
 		//Every team that this team beat, and by how much
-		std::map <const std::string, unsigned int> wins;
+		std::map <const std::string, int> results;
 
 	public:
 		const std::string name;
 		//A unique, prime identifier to do fancy loop checking
-		const unsigned int uid;
+		const BigInteger uid;
 
-		TeamMetaData(const std::string& n, const unsigned int id);
+		TeamMetaData(const std::string& n, const std::string& id);
 
-		void addWin(const std::string& n, unsigned int m);
+		void addResult(const std::string& opponentName, int difference);
 
-		const std::map<const std::string, unsigned int> getWins() const { return wins; }
+		const std::map<const std::string, int> getResults() const { return results; }
 	};
 
 	class Team {
 		int curBest;
 
-		unsigned long curBestPath;
+		BigInteger curBestPath;
 
 	public:
 		const TeamMetaData metadata;
@@ -30,9 +31,9 @@ namespace Team {
 
 		int getCurBest() const { return curBest; }
 
-		unsigned long getCurBestPath() const { return curBestPath; }
+		BigInteger getCurBestPath() const { return curBestPath; }
 
-		void setCurBestPath(int b) { curBestPath = b; }
+		void setCurBestPath(BigInteger b) { curBestPath = b; }
 
 		bool updateCurBest(const std::map<std::string, Team*>& teams);
 	};
