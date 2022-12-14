@@ -5,7 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#define NUM_THREADS 2
+#define NUM_THREADS 1
 
 
 namespace Solver {
@@ -26,6 +26,7 @@ namespace Solver {
 		//----------------------Threading Synchronization--------------
 		std::mutex queueAccess; //Lock queue reads and writes
 		std::condition_variable queueCV; //Condition to denote queue has been written to
+
 	};
 	//----------------------Worker Thread Functions-----------------
 	std::map<std::string, long> getSolution(const std::vector<Team::Team*>& teams, const std::map<std::string, Team::Team*>& teamsMap);

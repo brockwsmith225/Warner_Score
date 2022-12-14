@@ -24,7 +24,6 @@ Solver::SolverMetadata* Solver::SolverMetadata::getInstance() {
 std::map<std::string, long> Solver::getSolution(const std::vector<Team::Team*>& teams, const std::map<std::string, Team::Team*>& teamsMap) {
 	bool changed = true;
 	std::map<std::string, long> results;
-
 	while (changed) {
 		changed = false;
 		for (auto& t : teams) {
@@ -72,10 +71,10 @@ void Solver::shuffleTeamsList(std::vector<Team::Team*>& teams) {
 	for (auto& team : teams) {
 		team->setCurBest(0);
 		if (!(team->metadata.uid == BigInteger::ONE)) {
-			team->setCurBestPath(0);
+			team->setCurBestPath(BigInteger("0"));
 		}
 		else {
-			team->setCurBestPath(1);
+			team->setCurBestPath(BigInteger::ONE);
 		}
 	}
 }
@@ -88,18 +87,10 @@ void Solver::runWorkerThread() {
 	auto teamData = solverData->teamData;
 	auto teamsMap = initializeTeamsMap(teamData);
 	auto teamsList = getTeamsList(teamsMap);
+
 	
 	while (true) {
-		//std::cout << std::endl;
-		//for (const auto& team : teamsList) {
-		//	std::cout << team->metadata.name << " " << team->getCurBest() << std::endl;
-		//}
-		
 		auto solution = getSolution(teamsList, teamsMap);
-
-		//for (const auto& pair : solution) {
-		//	std::cout << pair.first << " " << pair.second << std::endl;
-		//}
 
 		//Report solution
 		solverData->queueAccess.lock();
@@ -172,6 +163,7 @@ void Solver::runSolver() {
 				changed = true;
 			}
 		}
+
 		if (changed) {
 			for (const auto& pair : solverData->bestScores) {
 				std::cout << pair.first << " " << pair.second << std::endl;
