@@ -7,7 +7,7 @@ void Team::TeamMetaData::addResult(const std::string& opponentName, int differen
 	results[opponentName] = difference;
 }
 
-Team::Team::Team(const TeamMetaData& m) : metadata{ m }, curBest{ 0 }, curBestPath{ 0 } {}
+Team::Team::Team(const TeamMetaData& m) : metadata{ m }, curBest{ 0 }, curBestPath{ "0" } {}
 
 bool Team::Team::updateCurBest(const std::map<std::string, Team*>& teams) {
 	bool changed{ false };

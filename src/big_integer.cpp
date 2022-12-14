@@ -1,8 +1,19 @@
 #include "big_integer.h"
+#include <iostream>
 
-BigInteger::BigInteger(const std::string& n) : num{ n } {}
+BigInteger::BigInteger(const std::string& n) {
+    auto first = n.find_first_not_of("0");
+    if (first != -1) {
+        num = n.substr(first);
+    }
+    else {
+        num = "0";
+    }
+}
 
 BigInteger::BigInteger(const char& d) : num{ d } {}
+
+BigInteger BigInteger::ONE = BigInteger("1");
 
 BigInteger::operator bool() const {
 	return num != "0";
@@ -22,13 +33,11 @@ BigInteger BigInteger::operator%(const BigInteger& a) const {
     BigInteger leftover("0");
 
     BigInteger temp(num[idx]);
-    while (temp < a)
+    while (temp < a) {
         temp = temp.timesPowerTen(1) + BigInteger(num[++idx]);
+    }
     //Long division while tracking remainder
     while (idx < num.length()) {
-        // Find prefix of number that's larger
-        // than a.value.
-
 
         int multNum = 0;
         leftover = temp;
@@ -93,6 +102,7 @@ BigInteger BigInteger::operator+(const BigInteger& a) const {
     if (num.length() < a.num.length())
         return a.operator+(*this);
 
+
     unsigned long numOfZeros = num.length() - a.num.length();
     //Make this and a are in the same length
     std::string aligned = std::string(numOfZeros, '0') + a.num;
@@ -120,16 +130,23 @@ BigInteger BigInteger::operator-(const BigInteger& a) const {
     std::string result;
     int borrow = 0;
     //Elementary place subtraction algorithm
-    for (long i = num.length() - 1; i >= 0; i--) {
-        char tVal = num[i] - borrow;
+    for (long i = 0; i < a.num.length(); i++) {
+        char tVal = num[num.length() - i - 1] - borrow;
         borrow == 0;
-        //Borrow if needed
-        if (a.num[i] > tVal) {
+        if (a.num[a.num.length() - i - 1] > tVal) {
             tVal += 10;
             borrow = 1;
         }
-        result.insert(0, 1, (tVal - a.num[i] + '0'));
+        result.insert(0, 1, (tVal - a.num[a.num.length() - i - 1] + '0'));
     }
+    for (long i = a.num.length(); i < num.length(); i++) {
+        char tVal = num[num.length() - i - 1] - borrow;
+        borrow == 0;
+        result.insert(0, 1, tVal);
+    }
+    auto first = result.find_first_not_of("0");
+    if(first != -1)
+        result = result.substr(first);
     return BigInteger(result);
 }
 

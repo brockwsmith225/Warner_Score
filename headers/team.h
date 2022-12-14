@@ -31,6 +31,8 @@ namespace Team {
 
 		int getCurBest() const { return curBest; }
 
+		void setCurBest(int cb) { curBest = cb; }
+
 		BigInteger getCurBestPath() const { return curBestPath; }
 
 		void setCurBestPath(BigInteger b) { curBestPath = b; }

@@ -1,10 +1,10 @@
 IDIR = ./headers
 SRCDIR = ./src
 CC = g++
-CFLAGS = -I $(IDIR)
+CFLAGS = -I $(IDIR) -pthread
 
 ODIR = obj
-_OBJ = team.o main.o big_integer.o
+_OBJ = team.o big_integer.o solver.o main.o
 OBJ = $(patsubst %, $(ODIR)/%,$(_OBJ))
 
 
