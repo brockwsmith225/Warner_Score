@@ -3,11 +3,20 @@
 #include <random>
 #include <thread>
 #include <iostream>
+#include <fstream>
+#include <rapidcsv.h>
 
 Solver::SolverMetadata::SolverMetadata() {
 	bestScoresQueue = std::vector<std::map<std::string, long>>{};
 	bestScores = std::map<std::string, long>{};
 	teamData = std::vector<Team::TeamMetaData>{};
+
+	rapidcsv::Document games("warner_score.csv");
+	auto teams = games.GetColumn<std::string>("team");
+	auto warnerScores = games.GetColumn<int>("warner_score");
+	for (int i = 0; i < teams.size(); i++) {
+		bestScores[teams[i]] = warnerScores[i];
+	}
 }
 
 Solver::SolverMetadata* Solver::SolverMetadata::instance{ nullptr };
@@ -105,33 +114,83 @@ void Solver::runWorkerThread() {
 /**
 * Function to get a list of primes for unique ids
 */
-std::vector<std::string> Solver::getPrimesList(int numTeams) {
-	//TODO: Implement
-	return {};
+std::vector<std::string> Solver::getPrimesList(int numTeams, int numGenerated) {
+	if (numGenerated == -1) numGenerated = 2800; //Just a starting point
+	std::vector<std::string> primes;
+	bool* isPrime = new bool[numGenerated];
+	isPrime[0] = isPrime[1] = false;//0 and 1 aren't prime
+	for (int i = 2; i < numGenerated; i++) isPrime[i] = true;//Initialize all are true
+	for (int i = 2; i < numGenerated; i++) {
+		if (isPrime[i]) {
+			primes.push_back(std::to_string(i));
+			//Set multiples of i to not prime
+			for (int j = i; j < numGenerated; j += i) {
+				isPrime[j] = false;
+			}
+		}
+	}
+	if (primes.size() >= numTeams) return primes;
+	//Just naively increase number of generated primes until enough are generated
+	return getPrimesList(numTeams, numGenerated * 2);
 }
-
 
 /**
 * Function to initialize the team metadata
 */
 void Solver::initializeTeamMetadata() {
-	//TODO: Actually read shit
+	//Read in game results
+	rapidcsv::Document games("Sports_Data_Scraper/games.csv");
+	auto teamNames = games.GetColumn<std::string>("team");
+	auto opponentNames = games.GetColumn<std::string>("opponent");
+	auto teamPoints = games.GetColumn<int>("points");
+	auto opponentPoints = games.GetColumn<int>("opp_points");
+	
+	//Generate Primes
+	auto primes = Solver::getPrimesList(500);
+
+	std::cout << "GOT PRIMES" << std::endl;
+
 	auto solverData = SolverMetadata::getInstance();
-	solverData->teamData.push_back(Team::TeamMetaData("B", "3"));
-	solverData->teamData[0].addResult("W", 1);
-	solverData->teamData[0].addResult("A", 10);
-	solverData->teamData[0].addResult("C", -1);
-	solverData->teamData.push_back(Team::TeamMetaData("C", "5"));
-	solverData->teamData[1].addResult("B", 1);
-	solverData->teamData[1].addResult("A", -1);
-	solverData->teamData.push_back(Team::TeamMetaData("A", "2"));
-	solverData->teamData[2].addResult("D", 1);
-	solverData->teamData[2].addResult("C", 1);
-	solverData->teamData[2].addResult("B", -10);
-	solverData->teamData.push_back(Team::TeamMetaData("D", "7"));
-	solverData->teamData[3].addResult("W", 1);
-	solverData->teamData[3].addResult("A", -1);
-	solverData->teamData.push_back(Team::TeamMetaData("W", "1"));
+	std::map<std::string, int> teamNamesSeen;// Which teams we've already seen
+
+	//Warner Pacific is team 1
+	solverData->teamData.push_back(Team::TeamMetaData("Warner Pacific", "1"));
+	teamNamesSeen["Warner Pacific"] = 0;
+
+	//Process game results
+	while (!teamNames.empty()) {
+		//Result of game
+		std::string team = teamNames.back();
+		std::string opponent = opponentNames.back();
+		int teamScore = teamPoints.back();
+		int opponentScore = opponentPoints.back();
+		teamNames.pop_back();
+		opponentNames.pop_back();
+		teamPoints.pop_back();
+		opponentPoints.pop_back();
+
+		if (team == "") continue;
+
+		//Add new team metadatas if needed
+		if (teamNamesSeen.find(team) == teamNamesSeen.end()) {
+			teamNamesSeen[team] = solverData->teamData.size();
+			solverData->teamData.push_back(Team::TeamMetaData(team, primes.back()));
+			primes.pop_back();
+		}
+		//std::cout << "Added teams " << teamNamesSeen.size() << std::endl;
+		if (teamNamesSeen.find(opponent) == teamNamesSeen.end()) {
+			teamNamesSeen[opponent] = solverData->teamData.size();
+			solverData->teamData.push_back(Team::TeamMetaData(opponent, primes.back()));
+			primes.pop_back();
+		}
+		int teamIndex = teamNamesSeen[team];
+		int opponentIndex = teamNamesSeen[opponent];
+
+		//Add result of game
+		solverData->teamData[teamIndex].addResult(opponent, teamScore - opponentScore);
+		solverData->teamData[opponentIndex].addResult(team, opponentScore - teamScore);
+	}
+	std::cout << teamNamesSeen.size() << std::endl;
 }
 
 
@@ -163,11 +222,17 @@ void Solver::runSolver() {
 				changed = true;
 			}
 		}
-
+		std::cout << "Received Results " << changed <<  std::endl;
+		
 		if (changed) {
+			std::ofstream scoreFile;
+			scoreFile.open("warner_score.csv", std::ios::out);
+			scoreFile << "team,warner_score" << std::endl;
 			for (const auto& pair : solverData->bestScores) {
-				std::cout << pair.first << " " << pair.second << std::endl;
+				std::cout << pair.first << std::endl;
+				scoreFile << "\"" << pair.first << "\"," << pair.second << std::endl;
 			}
+			scoreFile.close();
 		}
 	}
 }

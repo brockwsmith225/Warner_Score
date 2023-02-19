@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
+#include <vector>
 #include <map>
+#include <algorithm>
 #include "big_integer.h"
 namespace Team {
 	class TeamMetaData {
@@ -24,6 +26,8 @@ namespace Team {
 
 		BigInteger curBestPath;
 
+		std::vector<std::string> listBestPath;
+
 	public:
 		const TeamMetaData metadata;
 
@@ -36,6 +40,10 @@ namespace Team {
 		BigInteger getCurBestPath() const { return curBestPath; }
 
 		void setCurBestPath(BigInteger b) { curBestPath = b; }
+
+		void setListBestPath(std::vector<std::string> list, std::string team) { listBestPath = list; listBestPath.push_back(team); }
+
+		std::vector<std::string> getListBestPath() const { return listBestPath; }
 
 		bool updateCurBest(const std::map<std::string, Team*>& teams);
 	};

@@ -5,7 +5,7 @@
 #include <mutex>
 #include <condition_variable>
 
-#define NUM_THREADS 1
+#define NUM_THREADS 8
 
 
 namespace Solver {
@@ -36,7 +36,7 @@ namespace Solver {
 	void runWorkerThread();
 	//----------------------Main Thread Functions-------------------
 	//--------Initialization functions---------
-	std::vector<std::string> getPrimesList(int numTeams);
+	std::vector<std::string> getPrimesList(int numTeams, int numGenerated = -1);
 	void initializeTeamMetadata();
 	//--------Main Solver----------------------
 	void runSolver();
