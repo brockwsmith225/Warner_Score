@@ -24,11 +24,10 @@ bool Team::Team::updateCurBest(const std::map<std::string, Team*>& teams) {
 		auto dtBestPath = defeatedTeam.getCurBestPath();
 		auto dtListBestPath = defeatedTeam.getListBestPath();
 		//If the best path isn't divisible by the team's uid, the team is not in the path (and if uid is 0, there is no current valid path)
-		if (std::find(dtListBestPath.begin(), dtListBestPath.end(), metadata.name) == dtListBestPath.end()) {
+		if (dtListBestPath.size() != 0 && std::find(dtListBestPath.begin(), dtListBestPath.end(), metadata.name) == dtListBestPath.end()) {
 			if (dtBest + margin > curBest) {
 				curBest = dtBest + margin;
 				setListBestPath(dtListBestPath, result.first);
-				//curBestPath = dtBestPath * metadata.uid;
 				changed = true;
 			}
 		}

@@ -7,15 +7,15 @@
 #include <rapidcsv.h>
 
 Solver::SolverMetadata::SolverMetadata() {
-	bestScoresQueue = std::vector<std::map<std::string, long>>{};
-	bestScores = std::map<std::string, long>{};
+	bestScoresQueue = std::vector<std::map<std::string, std::pair<long, std::vector<std::string>>>>{};
+	bestScores = std::map<std::string, std::pair<long, std::vector<std::string>>>{};
 	teamData = std::vector<Team::TeamMetaData>{};
 
 	rapidcsv::Document games("warner_score.csv");
 	auto teams = games.GetColumn<std::string>("team");
 	auto warnerScores = games.GetColumn<int>("warner_score");
 	for (int i = 0; i < teams.size(); i++) {
-		bestScores[teams[i]] = warnerScores[i];
+		bestScores[teams[i]] = std::make_pair(warnerScores[i], std::vector<std::string>());
 	}
 }
 
@@ -30,9 +30,9 @@ Solver::SolverMetadata* Solver::SolverMetadata::getInstance() {
 /**
 * Gets the solution for a single ordering of the team list
 */
-std::map<std::string, long> Solver::getSolution(const std::vector<Team::Team*>& teams, const std::map<std::string, Team::Team*>& teamsMap) {
+std::map<std::string, std::pair<long, std::vector<std::string>>> Solver::getSolution(const std::vector<Team::Team*>& teams, const std::map<std::string, Team::Team*>& teamsMap) {
 	bool changed = true;
-	std::map<std::string, long> results;
+	std::map<std::string, std::pair<long, std::vector<std::string>>> results;
 	while (changed) {
 		changed = false;
 		for (auto& t : teams) {
@@ -40,7 +40,7 @@ std::map<std::string, long> Solver::getSolution(const std::vector<Team::Team*>& 
 		}
 	}
 	for (const auto& t : teams) {
-		results[t->metadata.name] = t->getCurBest();
+		results[t->metadata.name] = std::make_pair(t->getCurBest(), t->getListBestPath());
 	}
 
 	return results;
@@ -80,10 +80,10 @@ void Solver::shuffleTeamsList(std::vector<Team::Team*>& teams) {
 	for (auto& team : teams) {
 		team->setCurBest(0);
 		if (!(team->metadata.uid == BigInteger::ONE)) {
-			team->setCurBestPath(BigInteger("0"));
+			team->setListBestPath({});
 		}
 		else {
-			team->setCurBestPath(BigInteger::ONE);
+			team->setListBestPath({"Warner Pacific"});
 		}
 	}
 }
@@ -227,10 +227,13 @@ void Solver::runSolver() {
 		if (changed) {
 			std::ofstream scoreFile;
 			scoreFile.open("warner_score.csv", std::ios::out);
-			scoreFile << "team,warner_score" << std::endl;
+			scoreFile << "team,warner_score,path" << std::endl;
 			for (const auto& pair : solverData->bestScores) {
-				std::cout << pair.first << std::endl;
-				scoreFile << "\"" << pair.first << "\"," << pair.second << std::endl;
+				std::string teamsBeat = "";
+				for (const auto& team : pair.second.second) {
+					teamsBeat += team != *pair.second.second.begin() ? ",'" + team + "'" : "";
+				}
+				scoreFile << "\"" << pair.first << "\"," << pair.second.first <<  ",\"" << teamsBeat << "\"" << std::endl;
 			}
 			scoreFile.close();
 		}

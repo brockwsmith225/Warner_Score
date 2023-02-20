@@ -41,7 +41,7 @@ namespace Team {
 
 		void setCurBestPath(BigInteger b) { curBestPath = b; }
 
-		void setListBestPath(std::vector<std::string> list, std::string team) { listBestPath = list; listBestPath.push_back(team); }
+		void setListBestPath(std::vector<std::string> list, std::string team = "") { listBestPath = list; if(team != "") listBestPath.push_back(team); }
 
 		std::vector<std::string> getListBestPath() const { return listBestPath; }
 
